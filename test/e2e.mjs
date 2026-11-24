@@ -62,6 +62,8 @@ const u = must(await call('POST', `/api/v1/files/${fileId}/url?thingId=${drill.i
 const abs = new URL(u.url, base).toString();
 const got = await fetch(abs);
 const buf = Buffer.from(await got.arrayBuffer());
-console.log(got.status === 200 && buf.equals(jpeg) ? 'ok photo fetched back from storage, bytes match' : `FAIL photo fetch ${got.status} ${buf.length} ${abs.slice(0, 60)}`);
-if (got.status !== 200) process.exit(1);
+const want = (s.match(/"sha256":"([0-9a-f]{64})"/) || [])[1];
+const have = createHash('sha256').update(buf).digest('hex');
+console.log(got.status === 200 && have === want ? 'ok photo fetched back from storage, bytes match' : `FAIL photo fetch ${got.status} ${buf.length} ${abs.slice(0, 60)}`);
+if (got.status !== 200 || have !== want) process.exit(1);
 console.log('E2E PASS', mode);
