@@ -21,7 +21,8 @@ async function call(method, path, body, headers = {}) {
 }
 const must = (r, ok, what) => { if (!ok.includes(r.status)) { console.log('FAIL', what, r.status, r.text.slice(0, 300)); process.exit(1); } console.log('ok', what, r.status); return r.json; };
 // A 1x1 JPEG.
-const jpeg = Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', 'base64');
+import { readFileSync } from 'node:fs';
+const jpeg = process.env.PHOTO ? readFileSync(process.env.PHOTO) : Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', 'base64');
 
 must(await call('GET', '/readyz'), [200], 'readyz');
 const setup = must(await call('GET', '/api/v1/setup'), [200], 'setup status');
@@ -54,7 +55,8 @@ const view = must(await call('GET', `/api/v1/things/${drill.id}`), [200], 'thing
 const att = must(await call('GET', `/api/v1/things/${drill.id}/attachments`), [200], 'thing attachments');
 const s = JSON.stringify(att);
 console.log('thumbUrl', view.thumbUrl ? 'set' : 'null', 'attachments', s.slice(0, 200));
-const fileId = (s.match(/"fileId":"([0-9a-f-]{36})"/) || [])[1];
+const fileId = (s.match(/"file":\{"id":"([0-9a-f-]{36})"/) || [])[1];
+console.log('derivativeState', (s.match(/"derivativeState":"(\w+)"/) || [])[1]);
 if (!fileId) { console.log('FAIL no photo on thing', s.slice(0, 400)); process.exit(1); }
 const u = must(await call('POST', `/api/v1/files/${fileId}/url?thingId=${drill.id}`, { variant: 'original' }), [200], 'signed URL');
 const abs = new URL(u.url, base).toString();
