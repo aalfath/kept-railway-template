@@ -10,6 +10,7 @@ services:
     volumes: [pg:/var/lib/postgresql]
   minio:
     image: rustfs/rustfs:1.0.5
+    ports: ["9000:9000"]
     environment: {RUSTFS_ACCESS_KEY: testkey, RUSTFS_SECRET_KEY: testsecret123}
   mkbucket:
     image: curlimages/curl:8.11.1
@@ -35,6 +36,7 @@ services:
       KEPT_SETUP_CODE: ABC234
       KEPT_STORAGE: s3
       KEPT_S3_ENDPOINT: http://minio:9000
+      KEPT_S3_PUBLIC_ENDPOINT: http://localhost:9000
       KEPT_S3_BUCKET: kept
       KEPT_S3_REGION: us-east-1
       KEPT_S3_ACCESS_KEY_ID: testkey
