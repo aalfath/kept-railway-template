@@ -40,7 +40,7 @@ must(await call('POST', '/api/v1/auth/sign-in/email', { email, password }), [200
 if (mode === 'create') {
   const loc = must(await call('POST', '/api/v1/locations', { name: 'Railway test home', kind: 'home', timezone: 'UTC', currency: 'USD' }), [201], 'create location');
   const place = must(await call('POST', `/api/v1/locations/${loc.id}/places`, { name: 'Garage', kindKey: 'room' }), [201], 'create place');
-  const thing = must(await call('POST', '/api/v1/things', { locationId: loc.id, placeId: place.id, name: 'Cordless drill' }), [201], 'create thing');
+  const thing = must(await call('POST', '/api/v1/things', { locationId: loc.id, placeId: place.id, name: (process.env.NAME || 'Cordless drill') }), [201], 'create thing');
   const fid = uuid7();
   const up = must(await call('PUT', `/api/v1/files/${fid}?locationId=${loc.id}&class=photo`, new Uint8Array(jpeg),
     { 'content-type': 'image/jpeg', 'x-kept-sha256': createHash('sha256').update(jpeg).digest('hex') }), [200, 201], 'upload photo');
@@ -48,7 +48,7 @@ if (mode === 'create') {
 }
 const list = must(await call('GET', '/api/v1/things?limit=50'), [200], 'list things');
 const items = list.things ?? list.items ?? [];
-const drill = items.find((t) => t.name === 'Cordless drill');
+const drill = items.find((t) => t.name === (process.env.NAME || 'Cordless drill'));
 if (!drill) { console.log('FAIL drill missing', JSON.stringify(list).slice(0, 300)); process.exit(1); }
 console.log('ok thing present', drill.id);
 const view = must(await call('GET', `/api/v1/things/${drill.id}`), [200], 'thing view');
