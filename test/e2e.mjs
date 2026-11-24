@@ -51,7 +51,9 @@ const drill = items.find((t) => t.name === 'Cordless drill');
 if (!drill) { console.log('FAIL drill missing', JSON.stringify(list).slice(0, 300)); process.exit(1); }
 console.log('ok thing present', drill.id);
 const view = must(await call('GET', `/api/v1/things/${drill.id}`), [200], 'thing view');
-const s = JSON.stringify(view);
+const att = must(await call('GET', `/api/v1/things/${drill.id}/attachments`), [200], 'thing attachments');
+const s = JSON.stringify(att);
+console.log('thumbUrl', view.thumbUrl ? 'set' : 'null', 'attachments', s.slice(0, 200));
 const fileId = (s.match(/"fileId":"([0-9a-f-]{36})"/) || [])[1];
 if (!fileId) { console.log('FAIL no photo on thing', s.slice(0, 400)); process.exit(1); }
 const u = must(await call('POST', `/api/v1/files/${fileId}/url?thingId=${drill.id}`, { variant: 'original' }), [200], 'signed URL');
