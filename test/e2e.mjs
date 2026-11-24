@@ -25,7 +25,8 @@ const jpeg = Buffer.from('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP////////////////////
 
 must(await call('GET', '/readyz'), [200], 'readyz');
 const setup = must(await call('GET', '/api/v1/setup'), [200], 'setup status');
-if (mode === 'create') {
+const skipSetup = mode === 'create' && !setup.needed && process.env.RESUME;
+if (mode === 'create' && !skipSetup) {
   if (!setup.needed) { console.log('FAIL setup already done'); process.exit(1); }
   must(await call('POST', '/api/v1/setup', { code: 'WRONG1', email, password, displayName: 'Admin' }), [400, 401, 403, 429], 'wrong setup code refused');
   cookie = '';
@@ -37,7 +38,8 @@ must(await call('GET', '/api/v1/things'), [401, 403], 'things without sign-in re
 must(await call('POST', '/api/v1/auth/sign-in/email', { email, password }), [200], 'sign in');
 if (mode === 'create') {
   const loc = must(await call('POST', '/api/v1/locations', { name: 'Railway test home', kind: 'home', timezone: 'UTC', currency: 'USD' }), [201], 'create location');
-  const thing = must(await call('POST', '/api/v1/things', { locationId: loc.id, name: 'Cordless drill' }), [201], 'create thing');
+  const place = must(await call('POST', `/api/v1/locations/${loc.id}/places`, { name: 'Garage', kindKey: 'room' }), [201], 'create place');
+  const thing = must(await call('POST', '/api/v1/things', { locationId: loc.id, placeId: place.id, name: 'Cordless drill' }), [201], 'create thing');
   const fid = uuid7();
   const up = must(await call('PUT', `/api/v1/files/${fid}?locationId=${loc.id}&class=photo`, new Uint8Array(jpeg),
     { 'content-type': 'image/jpeg', 'x-kept-sha256': createHash('sha256').update(jpeg).digest('hex') }), [200, 201], 'upload photo');
